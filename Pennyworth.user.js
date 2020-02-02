@@ -1,10 +1,10 @@
 // ==UserScript==
-// @name         Accounting Script
-// @namespace    http://tampermonkey.net/
-// @version      1.2
+// @name         Pennywise
+// @namespace    mailto: blahblahbrian@protonmail.com
+// @version      1.3
 // @description  Records your transactions
-// @author       Sid
-//@match        https://www.torn.com/imarket.php*
+// @author       Hardy[2131687]
+// @match        https://www.torn.com/imarket.php*
 // @match        https://www.torn.com/bazaar.php*
 // @match        https://www.torn.com/item.php*
 // @match        https://www.torn.com/profiles.php*
@@ -12,16 +12,16 @@
 // @match        https://www.torn.com/preferences.php*
 // @match        https://www.torn.com/index.php*
 // @match        https://www.torn.com/pmarket.php*
-// @grant         GM_setValue
-// @grant         GM_getValue
-// @grant         GM_addStyle
-// @grant         GM_xmlhttpRequest
+// @grant        GM_setValue
+// @grant        GM_getValue
+// @grant        GM_addStyle
+// @grant        GM_xmlhttpRequest
 // @connect      script.google.com
 // ==/UserScript==
 
 (function() {
     'use strict';
-    //getting your script settings
+    //getting your script's settings
     var webapp = GM_getValue('link');
     var bazaar = GM_getValue('bazaar');
     var imarket = GM_getValue('imarket');
@@ -70,12 +70,12 @@
     var html = '<br><br><div class = hardy_box id="hardy_options"><div class="prefs-tab-title title-black top-round">Torn Accounting Settings </div><hr class="page-head-delimiter"><div class = accounting_text><form><br><label class = "css-label">Link to WebApp:<br><br><input type="text" id="weblink" name="link", class = "accounting_link"'+ link_value + '></label><br><br><br> ' + bazaar_inp + ' <br><br>' + imarket_inp + '<br><br> '+ points_inp + '<br><br> ' + cash_inp +'<br><br> ' + items_inp +'<br><br>' + foreign_inp + ' <br><br><br><button class = "accounting_save" id="savehardy_options" type="button">Save </button><br></div></div></form></div>';
 
 
-    //Creating Options on Preferences page by adding the above defined HTML
+    //Creating an  Options box on Preferences page by adding the above defined HTML
     if (window.location.href.includes("/preferences.php")) {
         $(".content-wrapper").append(html);
     }
 
-    //saving settings when the "Save" button is clicked
+    //saving settings when the "Save" button is clicked by the user
     $("#savehardy_options").on("click", function () {
         GM_setValue('link', document.getElementById("weblink").value);
         GM_setValue('bazaar', document.getElementById("bazaar_").checked);
@@ -116,9 +116,9 @@
     if (window.location.href.includes("index.php")) {
         getcountry();
     }
-    //Main part of the script. It catches server-side responses and parses them. It sends the responses to WebApp, only if they meet a certain criteria.
+    //Main part of the script. It catches AJAX responses and parses them. It sends the responses to WebApp, only if they meet a certain criteria.
     $(document).ajaxComplete(function (event, jqXHR, ajaxObj) {
-        //bazaar Log. It reads the server-side response and parses them. 
+        //bazaar Log.
         if (window.location.href.includes("/bazaar.php")) {
             if (ajaxObj.url.split("?")[0] == "bazaar.php") {
                 if (ajaxObj.data.split("&")[0] == "step=buyItem") {
@@ -145,7 +145,7 @@
                         sendData(jqXHR.responseText);
                     }
                 }
-            } //Cash Sent Log
+            } //Cash Sent Log, sent through the profile page of another player.
         } else if (window.location.href.includes("/profiles.php")) {
             if (ajaxObj.url.split("?")[0] == "/sendcash.php") {
                 if (ajaxObj.data.split("&")[0] == "step=cash1") {
@@ -153,7 +153,7 @@
                         sendData(jqXHR.responseText);
                     }
                 }
-            } //Cash Sent Log
+            } //Cash Sent Log, sent through www.torn.com/sendcash.php
         } else if (window.location.href.includes("/sendcash.php")) {
             if (ajaxObj.url.split("?")[0] == "sendcash.php") {
                 if (ajaxObj.data.split("&")[4] == "step=cash1") {
@@ -185,7 +185,7 @@
     //Adding CSS to options page
     GM_addStyle(`
 .accounting_save { padding: 5px 15px; font-size: 20px; }
-.hardy_box { background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); }
+.hardy_box { border-radius: 6px; background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); }
 .accounting_text { padding: 10px; padding-top: 10px; padding-right: 30px; padding-bottom: 10px; padding-left: 30px; }
 .accounting_link { border-color:#cccccc; font-size:16px; width: 90%; border-radius:8px; border-width:3px; border-style:ridge; padding: 10px; box-shadow: 1px 3px 5px 0px rgba(42,42,42,.39); text-shadow:0px 0px 1px rgba(42,42,42,.75); font-family:monospace; }
 .accounting_link:focus { outline:none; }
