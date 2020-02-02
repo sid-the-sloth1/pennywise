@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Pennywise
-// @namespace    mailto:blahblahbrian@protonmail.com
+// @namespace  hardy.pennywise
 // @version      1.3
 // @description  Records your transactions
 // @author       Hardy[2131687]
