@@ -90,4 +90,8 @@ Special thanks and apologies to [Malvo](https://www.torn.com/profiles.php?XID=21
 First time, please be gentle.
 
 
-[![](https://www.torn.com/signature.php?id=27&user=2131687)](https://www.torn.com/profiles.php?XID=2131687#/)
+
+
+[![](https://www.torn.com/signature.php?id=5&user=2131687&v=1528808940574)](https://www.torn.com/profiles.php?XID=2131687#/)
+
+ 
