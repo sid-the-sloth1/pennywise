@@ -67,7 +67,7 @@
         var foreign_inp = '<input type="checkbox" name="items_" id="foreign_" class="css-checkbox" /><label for="foreign_" class="css-label">  Abroad Items Log </label>';
     }
 
-    var html = '<br><br><div class = hardy_box id="hardy_options"><div class="prefs-tab-title title-black top-round">Pennywise </div><hr class="page-head-delimiter"><div class = accounting_text><form><br><label class = "css-label">Link to WebApp:<br><br><input type="text" id="weblink" name="link", class = "accounting_link"'+ link_value + '></label><br><br><br> ' + bazaar_inp + ' <br><br>' + imarket_inp + '<br><br> '+ points_inp + '<br><br> ' + cash_inp +'<br><br> ' + items_inp +'<br><br>' + foreign_inp + ' <br><br><br><button class = "accounting_save" id="savehardy_options" type="button">Save </button><br></div></div></form></div>';
+    var html = '<br><br><div class = hardy_box id="hardy_options"><div class="hardy_pennywise_header">Pennywise </div><hr class="page-head-delimiter"><div class = accounting_text><form><br><label class = "css-label">Link to WebApp:<br><br><input type="text" id="weblink" name="link", class = "accounting_link"'+ link_value + '></label><br><br><br> ' + bazaar_inp + ' <br><br>' + imarket_inp + '<br><br> '+ points_inp + '<br><br> ' + cash_inp +'<br><br> ' + items_inp +'<br><br>' + foreign_inp + ' <br><br><br><button class = "accounting_save" id="savehardy_options" type="button">Save </button><br></div></div></form></div>';
 
 
     //Creating an  Options box on Preferences page by adding the above defined HTML
@@ -104,7 +104,7 @@
         }
     }
 
-//This function is to get the name of country from where you buy stuff from.
+    //This function is to get the name of country from where you buy stuff from.
     function getcountry() {
         var country_array = ["Mexico", "Switzerland", "UAE", "Cayman Islands", "Canada", "Hawaii", "United Kingdom", "Argentina", "Japan", "China", "South Africa"];
         var country = document.getElementsByClassName('msg right-round')[1].childNodes[1].childNodes[0].data;
@@ -112,7 +112,7 @@
             sendData(JSON.stringify({"country": country}));
         }
     }
-//executing the above defined function to get the name of country
+    //executing the above defined function to get the name of country
     if (window.location.href.includes("index.php")) {
         getcountry();
     }
@@ -183,7 +183,19 @@
         }
     });
     //Adding CSS to options page
-    GM_addStyle(`
+    GM_addStyle(`.hardy_pennywise_header {
+
+align-items: center;
+color: rgb(249, 245, 245);
+font-size: 15px;
+
+
+background-color: rgb(31, 31, 32);
+border-radius: 3px;
+background-size: 4px;
+padding: 6px;
+}
+
 .accounting_save { padding: 5px 15px; font-size: 20px; }
 .hardy_box { border-radius: 8px; background-color: rgb(242, 242, 242); box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -moz-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); -webkit-box-shadow: 0px 4px 9px 3px rgba(119, 119, 119, 0.64); }
 .accounting_text { padding: 10px; padding-top: 10px; padding-right: 30px; padding-bottom: 10px; padding-left: 30px; }
