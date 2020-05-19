@@ -10,11 +10,14 @@
 // @grant        GM_addStyle
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
-// @connect   script.google.com
+// @connect    script.google.com
 // ==/UserScript==
 
 (function() {
 	'use strict';
+	
+	//Special Thanks to Helcostr for all his help with the code. Love ya <3 #NoHomo.  (っ.❛ ᴗ ❛.)っ
+	
 	//getting your script's settings
 	var penny_webapp = GM_getValue('link');
 	var penny_bazaar = GM_getValue('bazaar');
@@ -230,10 +233,10 @@
 					} else {
 						penny_cash_obj.tag = "None";
 					}
-					if (penny_cash_obj.theanon == "false") {
-						penny_cash_obj.theanon = "No";
-					} else {
+					if (penny_cash_obj.theanon == "true") {
 						penny_cash_obj.theanon = "Yes";
+					} else {
+						penny_cash_obj.theanon = "No";
 					}
 					penny_cash_obj.type = "cash_sent";
 					sendDatatoWebapp(penny_cash_obj);
