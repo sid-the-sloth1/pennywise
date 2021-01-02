@@ -15,67 +15,18 @@
 
 (function() {
     'use strict';
-
-
+    let settings = {"penny_bazaar": isChecked("bazaar", 1), "penny_imarket": isChecked("imarket", 1)};
+    console.log(settings);
     //Creating an  Options box on Preferences page by adding the above defined HTML
     if (window.location.href.includes("/preferences.php")) {
         addSettingsBox();
     }
 
-    //saving settings when the "Save" button is clicked by the user
-    $("#penny_savehardy_options").on("click", function () {
-        GM_setValue('link', document.getElementById("penny_weblink").value);
-        GM_setValue('bazaar', document.getElementById("penny_bazaar_").checked);
-        GM_setValue('imarket', document.getElementById("penny_imarket_").checked);
-        GM_setValue('points', document.getElementById("penny_points_").checked);
-        GM_setValue('cash', document.getElementById("penny_cash_").checked);
-        GM_setValue('items', document.getElementById("penny_items_").checked);
-        GM_setValue('foreign', document.getElementById("penny_foreign_").checked);
-        GM_setValue('version', "2.0");
-        location.reload(); //before you come at me with pitchforks for reloading the page, this sort of reload has been given clearance in the past by IceBlueFire. As it is not automatically reloading and only reloads when you have to save the settings.
-    });
-
-    //creating a pop-up to remind users to update the Spreadsheet code.
-    function pennyAlert() {
-        $(".content-wrapper").prepend(`<div class="penny_modal", id="penny_modal">
-      <div id="penny_modal-content">
-      <p class="penny_line">Hi!! You are using Pennywise script, which has recently been updated. Some changes were also made to the Spreadsheet. Please update the Spreadsheet code to make sure that the script works properly.</p>
-      <br><p class="penny_line"> Go to <a href="https://www.torn.com/forums.php?p=threads&t=16138949">this page</a> for more information.</p>
-      <br><div class="penny_button_container">
-      <button class="penny_close-button">Close me</button>
-      </div>
-      </div>
-      </div><br><br>`)
-    }
-    //pennyAlert();
-
 
     //defining a function to send data to your Webapp
     function sendDatatoWebapp(x) {
-        if (GM_getValue('version') !== '2.0') {
-            pennyAlert();
-        } else {
-            console.log(x);
-            GM_xmlhttpRequest({
-                method: "POST",
-                data: JSON.stringify({
-                    "pennywise": x
-                }),
-                url: penny_webapp,
-                onload: function(e) {
-                    console.log("Data has been sent to your Webapp.");
-                }
-            });
-        }
+        console.log(x);
     }
-
-    //for the alert Popup
-    $(".penny_close-button").on("click", function () {
-        GM_setValue('version', "2.0");
-        var node = document.getElementById("penny_modal");
-        node.style.display = "none";
-    });
-
     //This function is to get the name of country from where you buy stuff from.
     function getcountry() {
         var penny_country_array = ["Mexico",
@@ -100,17 +51,15 @@
     let original_fetch = unsafeWindow.fetch;
     unsafeWindow.fetch = async (input, init) => {
         let response = await original_fetch(input, init);
-
         let respo = response.clone();
-
         respo.json().then((data) => {
             if (input == "/bazaar.php?sid=bazaarData&step=buyItem" && data.success) {
                 let formData = {
                     itemName: /\sx\s(.*)\sfrom\s/.exec(data.text)[1]
-
                 };
-                for (let key of init.body.keys())
+                for (let key of init.body.keys()) {
                     formData[key] = init.body.get(key);
+                }
                 formData.userName = /\sfrom\s(.*)\'/.exec(data.text)[1];
                 formData.type = 'bazaar';
                 sendDatatoWebapp(formData);
@@ -118,8 +67,6 @@
         });
         return response;
     };
-
-
     //Main part of the script. It catches AJAX responses and parses them. It sends the responses to WebApp, only if they meet a certain criteria. Unlike the old version, I parsed the response in the script and sent it as a JSON string with only relevant data. Due to changes made by Ched, the below method no longer works for Bazaar items.
     $(document).ajaxComplete(function (event, jqXHR, ajaxObj) {
         var penny_ajax_formData = ajaxObj.data;
@@ -224,7 +171,6 @@
             }
         }
     });
-
     function isChecked(variableName, returnType) {
         let saved = GM_getValue(variableName);
         if (saved === null || typeof saved == "undefined" || saved === "no") {
@@ -269,6 +215,4 @@
             });
         }
     }
-    //Adding CSS to options box and the alert Popup
-
 })();
