@@ -15,7 +15,7 @@
 
 (function() {
     'use strict';
-    let settings = {"penny_bazaar": isChecked("bazaar", 1), "penny_imarket": isChecked("imarket", 1)};
+    let settings = {"penny_bazaar": isChecked("bazaar", 1), "penny_imarket": isChecked("imarket", 1), "penny_points": isChecked("points", 1)};
     console.log(settings);
     //Creating an  Options box on Preferences page by adding the above defined HTML
     if (window.location.href.includes("/preferences.php")) {
