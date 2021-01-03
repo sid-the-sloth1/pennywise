@@ -28,12 +28,35 @@
     } else if (pageUrl.includes("stockexchange.php")) {
         createIcons();
         addListeners();
+        if (pageUrl.includes("step=portfolio")) {
+            updatePortfolio();
+        }
+    } else if(pageUrl.includes("/bazaar.php")) {
+        //Bazaar log. Because Ched changed the way Bazaar Requests work. They now use Fetch
+        let original_fetch = unsafeWindow.fetch;
+        unsafeWindow.fetch = async (input, init) => {
+            let response = await original_fetch(input, init);
+            let respo = response.clone();
+            respo.json().then((data) => {
+                if (input == "/bazaar.php?sid=bazaarData&step=buyItem" && data.success) {
+                    let formData = {
+                        itemName: /\sx\s(.*)\sfrom\s/.exec(data.text)[1]
+                    };
+                    for (let key of init.body.keys()) {
+                        formData[key] = init.body.get(key);
+                    }
+                    formData.userName = /\sfrom\s(.*)\'/.exec(data.text)[1];
+                    formData.type = 'bazaar';
+                    sendDatatoWebapp(formData);
+                }
+            });
+            return response;
+        };
     }
     //defining a function to send data to your Webapp
-    function sendDatatoWebapp(x) {
-        console.log(x);
+    function sendDatatoWebapp(dataObj, linkType) {
+        console.log(dataObj);
     }
-    //This function is to get the name of country from where you buy stuff from.
     function getcountry() {
         let penny_country_array = ['Mexico', 'Switzerland', 'UAE', 'Cayman Islands', 'Canada', 'Hawaii', 'United Kingdom', 'Argentina', 'Japan', 'China', 'South Africa'];
         let penny_country = document.getElementsByClassName('msg right-round')[1].childNodes[1].childNodes[0].data;
@@ -41,26 +64,7 @@
             return penny_country;
         }
     }
-    //Bazaar log. Because Ched changed the way Bazaar Requests work. They now use Fetch
-    let original_fetch = unsafeWindow.fetch;
-    unsafeWindow.fetch = async (input, init) => {
-        let response = await original_fetch(input, init);
-        let respo = response.clone();
-        respo.json().then((data) => {
-            if (input == "/bazaar.php?sid=bazaarData&step=buyItem" && data.success) {
-                let formData = {
-                    itemName: /\sx\s(.*)\sfrom\s/.exec(data.text)[1]
-                };
-                for (let key of init.body.keys()) {
-                    formData[key] = init.body.get(key);
-                }
-                formData.userName = /\sfrom\s(.*)\'/.exec(data.text)[1];
-                formData.type = 'bazaar';
-                sendDatatoWebapp(formData);
-            }
-        });
-        return response;
-    };
+
     //Main part of the script. It catches AJAX responses and parses them. It sends the responses to WebApp, only if they meet a certain criteria. Unlike the old version, I parsed the response in the script and sent it as a JSON string with only relevant data. Due to changes made by Ched, the below method no longer works for Bazaar items.
     $(document).ajaxComplete(function (event, jqXHR, ajaxObj) {
         let penny_ajax_formData = ajaxObj.data;
@@ -163,6 +167,27 @@
                     sendDatatoWebapp(penny_foreign_obj);
                 }
             }
+        } else {
+            if (penny_ajax_url.includes("stockexchange.php?") && penny_ajax_url.includes("step=buy2")) {
+                let response = new DOMParser().parseFromString(jqXHR.responseText, 'text/html');
+                let text = response.querySelector(".stock-main-wrap div .info-msg-cont .info-msg .delimiter .msg").innerText.trim();
+                if (text.startsWith("You have bought")) {
+                    createIcons();
+                    let obj = {};
+                    obj.stocks = {};
+                    obj.stocks.shares = parseInt(retrieve(penny_ajax_url, "shares"));
+                    obj.stocks.cost = parseInt(retrieve(penny_ajax_url, "cost"));
+                    obj.stocks.price = obj.stocks.cost/obj.stocks.shares;
+                    obj.stocks.seller = "System";
+                    obj.stocks.sellerId = 0;
+                    obj.stocks.stamp = Date.now();
+                    let regexPattern = obj.stocks.shares === 1? /\sshare\sin\s(.*?)\sat\sa\s/: /\sshares\sin\s(.*?)\sat\sa\s/;
+                    obj.stocks.stockName = regexPattern.exec(text)[1];
+                    obj.stocks.type = "buy";
+                    sendDatatoWebapp(obj, 2);
+
+                }
+            }
         }
     });
     function isChecked(variableName, returnType) {
@@ -210,26 +235,28 @@
         }
     }
     function createIcons() {
-        let htmlIcon1 = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg homieTrade"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path id="homie-icon" d="M19 11V9h-8V5H9v4H5v2h4v8h2v-8h8m0-8c.5 0 1 .2 1.39.61C20.8 4 21 4.5 21 5v14c0 .5-.2 1-.61 1.39c-.39.41-.89.61-1.39.61H5c-.5 0-1-.2-1.39-.61C3.2 20 3 19.5 3 19V5c0-.5.2-1 .61-1.39C4 3.2 4.5 3 5 3h14z" fill="#626262"/></svg></div></span></span><span id="homietitle">Update Sheet</span>';
-        let htmlIcon2 = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg homieOptions"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1024 1024"><path id="homie-icon1" d="M512.5 390.6c-29.9 0-57.9 11.6-79.1 32.8c-21.1 21.2-32.8 49.2-32.8 79.1c0 29.9 11.7 57.9 32.8 79.1c21.2 21.1 49.2 32.8 79.1 32.8c29.9 0 57.9-11.7 79.1-32.8c21.1-21.2 32.8-49.2 32.8-79.1c0-29.9-11.7-57.9-32.8-79.1a110.96 110.96 0 0 0-79.1-32.8zm412.3 235.5l-65.4-55.9c3.1-19 4.7-38.4 4.7-57.7s-1.6-38.8-4.7-57.7l65.4-55.9a32.03 32.03 0 0 0 9.3-35.2l-.9-2.6a442.5 442.5 0 0 0-79.6-137.7l-1.8-2.1a32.12 32.12 0 0 0-35.1-9.5l-81.2 28.9c-30-24.6-63.4-44-99.6-57.5l-15.7-84.9a32.05 32.05 0 0 0-25.8-25.7l-2.7-.5c-52-9.4-106.8-9.4-158.8 0l-2.7.5a32.05 32.05 0 0 0-25.8 25.7l-15.8 85.3a353.44 353.44 0 0 0-98.9 57.3l-81.8-29.1a32 32 0 0 0-35.1 9.5l-1.8 2.1a445.93 445.93 0 0 0-79.6 137.7l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.2 56.5c-3.1 18.8-4.6 38-4.6 57c0 19.2 1.5 38.4 4.6 57l-66 56.5a32.03 32.03 0 0 0-9.3 35.2l.9 2.6c18.1 50.3 44.8 96.8 79.6 137.7l1.8 2.1a32.12 32.12 0 0 0 35.1 9.5l81.8-29.1c29.8 24.5 63 43.9 98.9 57.3l15.8 85.3a32.05 32.05 0 0 0 25.8 25.7l2.7.5a448.27 448.27 0 0 0 158.8 0l2.7-.5a32.05 32.05 0 0 0 25.8-25.7l15.7-84.9c36.2-13.6 69.6-32.9 99.6-57.5l81.2 28.9a32 32 0 0 0 35.1-9.5l1.8-2.1c34.8-41.1 61.5-87.4 79.6-137.7l.9-2.6c4.3-12.4.6-26.3-9.5-35zm-412.3 52.2c-97.1 0-175.8-78.7-175.8-175.8s78.7-175.8 175.8-175.8s175.8 78.7 175.8 175.8s-78.7 175.8-175.8 175.8z" fill="#626262"/></svg></div></span></span><span id="homietitle1">Settings</span>';
-        let stockIcon = document.querySelector('a[aria-labelledby="stockexchange"]') || document.querySelector('a[aria-labelledby="your-portfolio"]');
-        let parent = stockIcon.parentNode;
-        let newElement = document.createElement('a');
-        newElement.id = "homie_create_box";
-        newElement.setAttribute("role", "button");
-        newElement.setAttribute("aria-labelledby", "homie");
-        newElement.setAttribute("href", "#");
-        newElement.className = 'homie t-clear h c-pointer  m-icon line-h24 right';
-        newElement.innerHTML = htmlIcon1;
-        parent.insertBefore(newElement, document.querySelector(".links-footer"));
-        let anotherNewElement = document.createElement('a');
-        anotherNewElement.id = "homie_create_options_box";
-        anotherNewElement.setAttribute("role", "button");
-        anotherNewElement.setAttribute("aria-labelledby", "homie1");
-        anotherNewElement.setAttribute("href", "#");
-        anotherNewElement.className = 'homie1 t-clear h c-pointer  m-icon line-h24 right';
-        anotherNewElement.innerHTML = htmlIcon2;
-        parent.insertBefore(anotherNewElement, document.querySelector(".links-footer"));
+        if (!document.querySelector("#homie_create_box")) {
+            let htmlIcon1 = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg homieTrade"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><path id="homie-icon" d="M19 11V9h-8V5H9v4H5v2h4v8h2v-8h8m0-8c.5 0 1 .2 1.39.61C20.8 4 21 4.5 21 5v14c0 .5-.2 1-.61 1.39c-.39.41-.89.61-1.39.61H5c-.5 0-1-.2-1.39-.61C3.2 20 3 19.5 3 19V5c0-.5.2-1 .61-1.39C4 3.2 4.5 3 5 3h14z" fill="#626262"/></svg></div></span></span><span id="homietitle">Update Sheet</span>';
+            let htmlIcon2 = '<span class="icon-wrap svg-icon-wrap"><span class="link-icon-svg homieOptions"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true" focusable="false" width="1em" height="1em" style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);" preserveAspectRatio="xMidYMid meet" viewBox="0 0 1024 1024"><path id="homie-icon1" d="M512.5 390.6c-29.9 0-57.9 11.6-79.1 32.8c-21.1 21.2-32.8 49.2-32.8 79.1c0 29.9 11.7 57.9 32.8 79.1c21.2 21.1 49.2 32.8 79.1 32.8c29.9 0 57.9-11.7 79.1-32.8c21.1-21.2 32.8-49.2 32.8-79.1c0-29.9-11.7-57.9-32.8-79.1a110.96 110.96 0 0 0-79.1-32.8zm412.3 235.5l-65.4-55.9c3.1-19 4.7-38.4 4.7-57.7s-1.6-38.8-4.7-57.7l65.4-55.9a32.03 32.03 0 0 0 9.3-35.2l-.9-2.6a442.5 442.5 0 0 0-79.6-137.7l-1.8-2.1a32.12 32.12 0 0 0-35.1-9.5l-81.2 28.9c-30-24.6-63.4-44-99.6-57.5l-15.7-84.9a32.05 32.05 0 0 0-25.8-25.7l-2.7-.5c-52-9.4-106.8-9.4-158.8 0l-2.7.5a32.05 32.05 0 0 0-25.8 25.7l-15.8 85.3a353.44 353.44 0 0 0-98.9 57.3l-81.8-29.1a32 32 0 0 0-35.1 9.5l-1.8 2.1a445.93 445.93 0 0 0-79.6 137.7l-.9 2.6c-4.5 12.5-.8 26.5 9.3 35.2l66.2 56.5c-3.1 18.8-4.6 38-4.6 57c0 19.2 1.5 38.4 4.6 57l-66 56.5a32.03 32.03 0 0 0-9.3 35.2l.9 2.6c18.1 50.3 44.8 96.8 79.6 137.7l1.8 2.1a32.12 32.12 0 0 0 35.1 9.5l81.8-29.1c29.8 24.5 63 43.9 98.9 57.3l15.8 85.3a32.05 32.05 0 0 0 25.8 25.7l2.7.5a448.27 448.27 0 0 0 158.8 0l2.7-.5a32.05 32.05 0 0 0 25.8-25.7l15.7-84.9c36.2-13.6 69.6-32.9 99.6-57.5l81.2 28.9a32 32 0 0 0 35.1-9.5l1.8-2.1c34.8-41.1 61.5-87.4 79.6-137.7l.9-2.6c4.3-12.4.6-26.3-9.5-35zm-412.3 52.2c-97.1 0-175.8-78.7-175.8-175.8s78.7-175.8 175.8-175.8s175.8 78.7 175.8 175.8s-78.7 175.8-175.8 175.8z" fill="#626262"/></svg></div></span></span><span id="homietitle1">Settings</span>';
+            let stockIcon = document.querySelector('a[aria-labelledby="stockexchange"]') || document.querySelector('a[aria-labelledby="your-portfolio"]');
+            let parent = stockIcon.parentNode;
+            let newElement = document.createElement('a');
+            newElement.id = "homie_create_box";
+            newElement.setAttribute("role", "button");
+            newElement.setAttribute("aria-labelledby", "homie");
+            newElement.setAttribute("href", "#");
+            newElement.className = 'homie t-clear h c-pointer  m-icon line-h24 right';
+            newElement.innerHTML = htmlIcon1;
+            parent.insertBefore(newElement, document.querySelector(".links-footer"));
+            let anotherNewElement = document.createElement('a');
+            anotherNewElement.id = "homie_create_options_box";
+            anotherNewElement.setAttribute("role", "button");
+            anotherNewElement.setAttribute("aria-labelledby", "homie1");
+            anotherNewElement.setAttribute("href", "#");
+            anotherNewElement.className = 'homie1 t-clear h c-pointer  m-icon line-h24 right';
+            anotherNewElement.innerHTML = htmlIcon2;
+            parent.insertBefore(anotherNewElement, document.querySelector(".links-footer"));
+        }
     }
     function addListeners() {
         document.addEventListener("input", function(g) {
@@ -342,7 +369,7 @@
                 toBeSent = {
                     "stocks": {}};
             } else if (e.target.id == "homieSendyes") {
-                sendDatatoWebapp(toBeSent, "POST", 2);
+                sendDatatoWebapp(toBeSent, 3);
             } else if (e.target.id == "homieCloseSetting") {
                 document.querySelector(".homieSettingsBox").remove();
             } else if (e.target.id == "homieSaveUrl") {
@@ -398,5 +425,31 @@
     }
     function retrieve(string, argName) {
         return string.split(`${argName}=`)[1].split("&")[0];
+    }
+    function updatePortfolio() {
+        let array = [];
+        let stockList = document.querySelector(".stock-main-wrap .stock-cont").children;
+        for (const item of stockList) {
+            let info = item.querySelector(".item .info");
+            let obj = {}
+            obj.acronym = item.getAttribute("data-stock").toUpperCase();
+            obj.shares = parseInt(info.querySelector(".b-price-wrap .first-row").innerText.replace(/\s/g, "").split(":")[1].replace(/,/g, ""));
+            obj.current_price = info.querySelector(".b-price-wrap .second-row").innerText.replace(/\s/g, "").split("$")[1].replace(/,/g, "").split("S")[0];
+            obj.price = info.querySelector(".c-price-wrap .second-row").innerText.replace(/\s/g, "").split(":$")[1].replace(/,/g, "").split("S")[0];
+            obj.time = info.querySelector(".length-wrap .first-row").innerText.replace(/\s/g, "").split(":")[1].split("(")[0];
+            obj.worth = info.querySelector(".c-price-wrap .first-row").innerText.replace(/\s/g, "").split("$")[1].replace(/,/g, "");
+            let changeclass = info.querySelector(".length-wrap .second-row .prop-wrap .change")
+            let sign = changeclass.querySelector(".arrow-change-icon").getAttribute("aria-label") === "stock price is down"? "-": "";
+            obj.change = sign + changeclass.innerText.replace(/\s/g, "").replace(/,/g, "").split("$")[1].split("(")[0];
+            obj.loss_profit = Math.round(obj.change * obj.shares);
+            obj.percent = sign+changeclass.innerText.replace(/,/g, "").replace(/\s/g, "").split("(")[1].split("%")[0];
+            obj.boughtTotal = Math.round(obj.shares*obj.price);
+            array.push(obj);
+        }
+        let dict = {};
+        dict.stocks = {};
+        dict.stocks.data = array;
+        dict.stocks.type = "portfolio"
+        sendDatatoWebapp(dict, 2);
     }
 })();
