@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Pennywise
 // @namespace   hardy.pennywise
-// @version      3.0
+// @version      3.1
 // @description  Records your transactions
 // @author       Hardy[2131687]
 // @match        https://www.torn.com/*
@@ -11,6 +11,7 @@
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @connect      script.google.com
+// @updateURL    http://localhost:8000/storage/shared/Android/data/io.spck/files/pennywise/Pennywise.user.js
 // ==/UserScript==
 
 (function() {
